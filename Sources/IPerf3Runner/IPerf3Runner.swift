@@ -69,7 +69,7 @@ public class IPerf3Runner {
 
 private extension IPerf3Runner {
   func getLastResult(stream: iperf_stream?) -> iperf_interval_results? {
-    var current: iperf_interval_results? = stream?.result.pointee.interval_results.tqh_first.pointee
+    var current: iperf_interval_results? = stream?.result?.pointee.interval_results.tqh_first?.pointee
     var lastResult: iperf_interval_results?
     while current != nil {
       lastResult = current
@@ -83,7 +83,7 @@ private extension IPerf3Runner {
   }
 
   func getTotalBytes(stream: iperf_stream?) -> Double {
-    Double(stream?.result.pointee.bytes_received ?? 0)
+    Double(stream?.result?.pointee.bytes_received ?? 0)
   }
 
   func allStreams(stream: iperf_stream?) -> [iperf_stream] {
@@ -99,7 +99,10 @@ private extension IPerf3Runner {
   }
 
   func handleCompletion(stream: iperf_stream) {
-    let result = stream.result.pointee
+    guard let result = stream.result?.pointee else {
+      callback?(.error(.unknown))
+      return
+    }
     let bytes = allStreams(stream: stream)
       .reduce(into: 0) { (bytes, current) in bytes += getTotalBytes(stream: current) }
     let totalDuration = Double(result.end_time.secs - result.start_time.secs)
